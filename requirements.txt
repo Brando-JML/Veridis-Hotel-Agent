@@ -1,2 +1,6 @@
 langchain
 langchain-text-splitters
+chromadb
+langchain-huggingface
+langchain-chroma
+sentence-transformers
