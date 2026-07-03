@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_cohere import ChatCohere
@@ -6,24 +7,25 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-# Configuracion de entorno
-os.environ["COHERE_API_KEY"] = "lDxXuHqPFgg9hTCLpW1Ea3xVOLOoYNOhzZU8PN0e"
+# 1. Cargar variables de entorno (Tu API Key está a salvo y oculta en el archivo .env)
+load_dotenv()
+
 DB_DIR = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 
 def inicializar_agente():
     print("[INFO] Inicializando servicios del agente RAG...")
     
-    # Configuracion de base de datos vectorial y embeddings
+    # 2. Conexión a la Base de Datos Vectorial
     modelo_embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
     vectorstore = Chroma(persist_directory=DB_DIR, embedding_function=modelo_embeddings)
     recuperador = vectorstore.as_retriever(search_kwargs={"k": 4})
     
-    # Inicializacion del LLM
+    # 3. Inicialización del LLM (Cohere)
     llm = ChatCohere(model="command-r-plus-08-2024", temperature=0.1)
     
-    # Definicion del System Prompt
+    # 4. EL PROMPT MAESTRO
     instrucciones_sistema = (
         "Eres el asistente virtual corporativo de Veridis Eco-Park & Resort. "
         "Tu objetivo es asistir a los usuarios basándote exclusivamente en el contexto proporcionado.\n\n"
