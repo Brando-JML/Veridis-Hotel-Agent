@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_cohere import ChatCohere
@@ -6,33 +7,32 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-# Configuracion de entorno
-os.environ["COHERE_API_KEY"] = "lDxXuHqPFgg9hTCLpW1Ea3xVOLOoYNOhzZU8PN0e"
+# 1. Cargar variables de entorno
+load_dotenv()
+
 DB_DIR = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 
 def inicializar_agente():
     print("[INFO] Inicializando servicios del agente RAG...")
     
-    # Configuracion de base de datos vectorial y embeddings
+    # 2. Conexion a la Base de Datos Vectorial
     modelo_embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
     vectorstore = Chroma(persist_directory=DB_DIR, embedding_function=modelo_embeddings)
     recuperador = vectorstore.as_retriever(search_kwargs={"k": 4})
     
-    # Inicializacion del LLM
+    # 3. Inicializacion del LLM (Cohere)
     llm = ChatCohere(model="command-r-plus-08-2024", temperature=0.1)
     
-    # Definicion del System Prompt
+    # 4. EL PROMPT MAESTRO (Modificado sin instrucciones de citacion)
     instrucciones_sistema = (
         "Eres el asistente virtual corporativo de Veridis Eco-Park & Resort. "
-        "Tu objetivo es asistir a los usuarios basándote exclusivamente en el contexto proporcionado.\n\n"
+        "Tu objetivo es asistir a los usuarios basandote exclusivamente en el contexto proporcionado.\n\n"
         "Reglas de operacion:\n"
         "1. Si la informacion solicitada no se encuentra en el contexto, responde textualmente: "
-        "'No dispongo de esta información en los documentos actuales. Por favor, comuníquese a la extensión 911 (Recepción).'\n"
-        "2. No generes ni asumas datos, precios o politicas externas al contexto.\n"
-        "3. Al finalizar tu respuesta, es obligatorio citar el documento fuente. "
-        "Formato requerido: '\n\nFuente: [Nombre del archivo]'\n\n"
+        "'No dispongo de esta informacion en los documentos actuales. Por favor, comuniquese a la extension 911 (Recepcion).'\n"
+        "2. No generes ni asumas datos, precios o politicas externas al contexto.\n\n"
         "Contexto recuperado:\n{context}"
     )
     
@@ -41,13 +41,9 @@ def inicializar_agente():
         ("human", "{input}"),
     ])
     
-    # Formateo de documentos recuperados para inyectar metadatos
+    # Formateo limpio (Sin inyectar el nombre del archivo origen)
     def formatear_documentos(docs):
-        textos_formateados = []
-        for doc in docs:
-            origen = doc.metadata.get("Archivo_Origen", "Desconocido")
-            textos_formateados.append(f"[Archivo origen: {origen}]\n{doc.page_content}")
-        return "\n\n---\n\n".join(textos_formateados)
+        return "\n\n---\n\n".join([doc.page_content for doc in docs])
     
     # Cadena de ejecucion LCEL
     cadena_rag = (
