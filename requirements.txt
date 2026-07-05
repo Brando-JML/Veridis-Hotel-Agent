@@ -4,3 +4,4 @@ chromadb
 langchain-huggingface
 langchain-chroma
 sentence-transformers
+streamlit
