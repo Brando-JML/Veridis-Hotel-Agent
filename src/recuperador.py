@@ -25,7 +25,7 @@ def buscar_contexto(pregunta_usuario, n_fragmentos=3):
     return resultados
 
 if __name__ == "__main__":
-    # Prueba de fuego: Hacemos una pregunta que no usa las palabras exactas del manual
+  
     pregunta = "¿Qué pasa si mi mascota hace mucho ruido en la habitación?"
     
     fragmentos_recuperados = buscar_contexto(pregunta)
